@@ -3,9 +3,12 @@ package dev.patika.vetSystem.business.concretes;
 import dev.patika.vetSystem.business.abstracts.IAppointmentService;
 import dev.patika.vetSystem.core.config.modelMapper.IModelMapperService;
 import dev.patika.vetSystem.core.exception.NotFoundException;
+import dev.patika.vetSystem.core.result.ResultData;
 import dev.patika.vetSystem.core.utilies.Msg;
+import dev.patika.vetSystem.core.utilies.ResultHelper;
 import dev.patika.vetSystem.dao.AppointmentRepo;
 import dev.patika.vetSystem.dao.AvailableDateRepo;
+import dev.patika.vetSystem.dto.response.appointment.AppointmentResponse;
 import dev.patika.vetSystem.entities.Appointment;
 import dev.patika.vetSystem.entities.AvailableDate;
 import org.springframework.data.domain.Page;
@@ -38,7 +41,14 @@ public class AppointmentManager implements IAppointmentService {
                 appointment.getDoctor().getId() , appointment.getAppointmentDate());
         if (!appointmentDate.isEmpty()) {
             throw new IllegalArgumentException("Bu dokturun bu tarihte baska bir randevusu mevcut!!");
-
+        }
+        //repo degil serviceden tasi
+        Optional<AvailableDate> availableDate = availableDateRepo.findByDoctorIdAndAvailableDate(
+                appointment.getDoctor().getId(),
+                appointment.getAppointmentDate().toLocalDate()
+        );
+        if(availableDate.isEmpty()){
+            throw new IllegalArgumentException("Doktor bu gunde musait degil");
         }
         return this.appointmentRepo.save(appointment);
     }
@@ -71,9 +81,9 @@ public class AppointmentManager implements IAppointmentService {
         Pageable pageable = PageRequest.of(page,pageSize);
         return this.appointmentRepo.findAll(pageable);
     }
-
+    @Override
     public List<Appointment> findByDoctorIdAndAppointmentDateBetween(int doctorId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return this.appointmentRepo.findByDoctorIdAndAppointmentDateBetween(doctorId, startDateTime, endDateTime);
+        return  this.appointmentRepo.findByDoctorIdAndAppointmentDateBetween(doctorId, startDateTime, endDateTime);
     }
 
     @Override
