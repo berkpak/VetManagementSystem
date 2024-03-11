@@ -24,6 +24,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 @RestController
 @RequestMapping("/v1/vaccines")
 public class VaccineController {
@@ -66,19 +68,18 @@ public class VaccineController {
         List<Vaccine> vaccines = vaccineService.findByAnimalId(animalId);
         List<VaccineResponse> vaccineResponses = vaccines.stream()
                 .map(vaccine -> modelMapper.forResponse().map(vaccine, VaccineResponse.class))
-                .collect(Collectors.toList());
+                .collect(toList());
         return ResultHelper.success(vaccineResponses);
     }
 
     @GetMapping("/protection-dates")
     @ResponseStatus(HttpStatus.OK)
-    public List<VaccineResponse> getByProtectionEndDateBetween(
+    public ResultData <List<VaccineResponse>> getByProtectionEndDateBetween(
             @RequestParam("start_date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("end_date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate finishDate) {
         List<Vaccine> vaccines = this.vaccineService.findByProtectionDate(startDate, finishDate);
-        return vaccines.stream()
-                .map(vaccine -> this.modelMapper.forResponse().map(vaccine, VaccineResponse.class))
-                .collect(Collectors.toList());
+        List<VaccineResponse> vaccineResponses = vaccines.stream().map(vaccine -> this.modelMapper.forResponse().map(vaccine, VaccineResponse.class)).toList();
+        return ResultHelper.success(vaccineResponses);
     }
 
     @PutMapping()

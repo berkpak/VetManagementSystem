@@ -33,9 +33,9 @@ public class AvailableDateController {
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<AvailableDateResponse> save(@Valid @RequestBody AvailableDateSaveRequest availableDateSaveRequest){
-        AvailableDate saveAvailableDates = this.modelMapper.forRequest().map(availableDateSaveRequest, AvailableDate.class);
-        this.availableDateService.save(saveAvailableDates);
-        return ResultHelper.created(this.modelMapper.forResponse().map(saveAvailableDates, AvailableDateResponse.class));
+       // AvailableDate saveAvailableDates = this.modelMapper.forRequest().map(availableDateSaveRequest, AvailableDate.class);
+        this.availableDateService.save(availableDateSaveRequest);
+        return ResultHelper.created(this.modelMapper.forResponse().map(availableDateSaveRequest, AvailableDateResponse.class));
     }
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

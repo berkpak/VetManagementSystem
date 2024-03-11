@@ -1,5 +1,6 @@
 package dev.patika.vetSystem.dto.request.animal;
 
+import dev.patika.vetSystem.entities.Customer;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,6 @@ public class AnimalUpdateRequest {
     private String colour;
    // @NotNull(message = "Hayvan dogum tarihi bos veya null olamaz")
     private LocalDate dateOfBirth;
-    private int customerId;
+    private Customer customer;
 
 }

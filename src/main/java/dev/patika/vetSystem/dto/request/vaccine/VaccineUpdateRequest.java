@@ -1,5 +1,6 @@
 package dev.patika.vetSystem.dto.request.vaccine;
 
+import dev.patika.vetSystem.entities.Animal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -23,6 +24,6 @@ public class VaccineUpdateRequest {
     private String code;
     private LocalDate protectionStartDate;
     private LocalDate protectionFinishDate;
-    private int animalId;
+    private Animal animal;
 
 }

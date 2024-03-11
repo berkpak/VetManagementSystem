@@ -42,15 +42,15 @@ public class DoctorManager implements IDoctorService {
 
     @Override
     public ResultData<Doctor>  update(Doctor doctor) {
-       Doctor selectedDoctor = this.get(doctor.getId());
+        Doctor selectedDoctor = this.get(doctor.getId());
 
-       selectedDoctor.setName(doctor.getName());
-       selectedDoctor.setCity(doctor.getCity());
-       selectedDoctor.setAddress(doctor.getAddress());
-       selectedDoctor.setMail(doctor.getMail());
-       selectedDoctor.setPhone(doctor.getPhone());
+        selectedDoctor.setName(doctor.getName());
+        selectedDoctor.setCity(doctor.getCity());
+        selectedDoctor.setAddress(doctor.getAddress());
+        selectedDoctor.setMail(doctor.getMail());
+        selectedDoctor.setPhone(doctor.getPhone());
 
-       Doctor updatedDoctor = this.doctorRepo.save(selectedDoctor);
+        Doctor updatedDoctor = this.doctorRepo.save(selectedDoctor);
         return ResultHelper.success(updatedDoctor);
     }
 

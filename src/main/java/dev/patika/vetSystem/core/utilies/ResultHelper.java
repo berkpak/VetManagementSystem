@@ -27,6 +27,12 @@ public class ResultHelper {
     public static  Result notFoundError(String msg){
         return new Result(false, msg,"404");
     }
+    public static  Result alreadyExist(String msg){
+        return new Result(false, Msg.ALREADY_EXIST,"409");
+    }
+    public static  Result vaccineExist(String msg){
+        return new Result(false, Msg.VACCINE_EXIST,"409");
+    }
 
     public static <T> ResultData<CursorResponse<T>> cursor(Page<T> pageData){
         CursorResponse<T> cursor = new CursorResponse<>();

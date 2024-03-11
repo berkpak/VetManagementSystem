@@ -12,6 +12,8 @@ import java.util.List;
 public interface VaccineRepo extends JpaRepository<Vaccine, Integer> {
 
     List<Vaccine> findByAnimalId(int animalId);
-    List<Vaccine> findByProtectionStartDateBetween(LocalDate startDate, LocalDate finishDate);
+    List<Vaccine> findByProtectionFinishDateBetween(LocalDate startDate, LocalDate finishDate);
+
+    List<Vaccine> findByNameAndCode(String name, String code);
 }
 

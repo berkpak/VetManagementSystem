@@ -20,6 +20,5 @@ public class AnimalSaveRequest {
     private String gender;
     private String colour;
     private LocalDate dateOfBirth;
-    private int customerId;
-
+    private Customer customer;
 }

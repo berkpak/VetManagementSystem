@@ -1,5 +1,6 @@
 package dev.patika.vetSystem.dto.request.vaccine;
 
+import dev.patika.vetSystem.entities.Animal;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -19,5 +20,5 @@ public class VaccineSaveRequest {
     private String code;
     private LocalDate protectionStartDate;
     private LocalDate protectionFinishDate;
-    private int animalId;
+    private Animal animal;
 }

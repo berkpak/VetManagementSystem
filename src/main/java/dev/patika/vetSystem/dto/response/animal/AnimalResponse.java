@@ -15,6 +15,7 @@ public class AnimalResponse {
     private String name;
     private String breed;
     private String gender;
+    private String species;
     private String colour;
     private LocalDate dateOfBirth;
     private int customerId;

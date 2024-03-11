@@ -41,7 +41,7 @@ public class AnimalManager implements IAnimalService {
     public Animal update(Animal animal) {
         Animal selectedAnimal = this.get(animal.getId());
 
-        /*selectedAnimal.setName(animal.getName());
+        selectedAnimal.setName(animal.getName());
         selectedAnimal.setBreed(animal.getBreed());
         selectedAnimal.setColour(animal.getColour());
         selectedAnimal.setSpecies(animal.getSpecies());
@@ -49,7 +49,7 @@ public class AnimalManager implements IAnimalService {
         selectedAnimal.setDateOfBirth(animal.getDateOfBirth());
         selectedAnimal.setCustomer(animal.getCustomer());
 
-         */
+
 
         return this.animalRepo.save(selectedAnimal);
     }
@@ -67,7 +67,7 @@ public class AnimalManager implements IAnimalService {
 
     @Override
     public boolean delete(int id) {
-        Animal animal = this.get(id);
+        Animal animal = this.animalRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
         this.animalRepo.delete(animal);
         return true;
     }

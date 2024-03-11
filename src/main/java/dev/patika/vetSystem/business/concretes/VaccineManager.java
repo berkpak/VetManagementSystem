@@ -27,8 +27,14 @@ public class VaccineManager implements IVaccineService {
     @Override
     public Vaccine save(Vaccine vaccine) {
 
-        if(vaccine.getProtectionStartDate().isAfter(vaccine.getProtectionFinishDate())){
-            throw new IllegalArgumentException("Koruyuculuk tarihi gecmis asiyi kayit edemezsiniz. Tarihleri tekrar kontrol ediniz");
+        List<Vaccine> vaccines = this.findByNameAndCode(vaccine.getName(), vaccine.getCode());
+
+        if(!vaccines.isEmpty()){
+            for(Vaccine vaccine1: vaccines){
+                if(vaccine1.getProtectionFinishDate().isAfter(vaccine.getProtectionStartDate())){
+                    throw new RuntimeException("Koruyuculuk tarihi bitmeden yeni bir asi kayit edilemez");
+                }
+            }
         }
         return this.vaccineRepo.save(vaccine);
     }
@@ -70,7 +76,12 @@ public class VaccineManager implements IVaccineService {
 
     @Override
     public List<Vaccine> findByProtectionDate(LocalDate startDate, LocalDate finishDate) {
-        return this.vaccineRepo.findByProtectionStartDateBetween(startDate,finishDate);
+        return this.vaccineRepo.findByProtectionFinishDateBetween(startDate,finishDate);
+    }
+
+    @Override
+    public List<Vaccine> findByNameAndCode(String name, String code) {
+        return this.vaccineRepo.findByNameAndCode(name, code);
     }
 
 

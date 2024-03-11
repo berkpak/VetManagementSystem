@@ -11,4 +11,6 @@ import java.util.Optional;
 @Repository
 public interface AvailableDateRepo extends JpaRepository<AvailableDate,Integer> {
     Optional<AvailableDate> findByDoctorIdAndAvailableDate(int doctorId, LocalDate date);
+
+
 }

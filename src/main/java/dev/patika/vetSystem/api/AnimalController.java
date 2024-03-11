@@ -33,9 +33,9 @@ public class AnimalController {
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<AnimalResponse> save(@Valid @RequestBody AnimalSaveRequest animalSaveRequest){
-        Animal saveAnimal = this.modelMapper.forRequest().map(animalSaveRequest, Animal.class);
-        this.animalService.save(saveAnimal);
-        return ResultHelper.created(this.modelMapper.forResponse().map(saveAnimal, AnimalResponse.class));
+       // Animal saveAnimal = this.modelMapper.forRequest().map(animalSaveRequest, Animal.class);
+        this.animalService.save(animalSaveRequest);
+        return ResultHelper.created(this.modelMapper.forResponse().map(animalSaveRequest, AnimalResponse.class));
     }
 
     @GetMapping("/{id}")

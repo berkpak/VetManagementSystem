@@ -1,11 +1,10 @@
 package dev.patika.vetSystem.core.config;
 
+import dev.patika.vetSystem.core.exception.AlreadyExistsException;
 import dev.patika.vetSystem.core.exception.NotFoundException;
 import dev.patika.vetSystem.core.result.Result;
 import dev.patika.vetSystem.core.result.ResultData;
-import dev.patika.vetSystem.core.utilies.Msg;
 import dev.patika.vetSystem.core.utilies.ResultHelper;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -33,4 +32,11 @@ public class GlobalExceptionHandler {
         public ResponseEntity<Result> handleNotFoundException(NotFoundException e){
             return new ResponseEntity<>(ResultHelper.notFoundError(e.getMessage()), HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Result> handleAlreadyExist(AlreadyExistsException e){
+        return new ResponseEntity<>(ResultHelper.alreadyExist(e.getMessage()), HttpStatus.CONFLICT);
+    }
+
+
 }
