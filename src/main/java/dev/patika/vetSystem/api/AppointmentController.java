@@ -81,7 +81,7 @@ public class AppointmentController {
             @RequestParam("startDateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime,
             @RequestParam("endDateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime) {
         List<Appointment> appointments = this.appointmentService.findByDoctorIdAndAppointmentDateBetween(doctorId, startDateTime, endDateTime);
-        return appointments.stream()
+        return  appointments.stream()
                 .map(appointment -> this.modelMapper.forResponse().map(appointment, AppointmentResponse.class))
                 .collect(Collectors.toList());
     }

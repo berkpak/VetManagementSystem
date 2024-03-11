@@ -48,7 +48,7 @@ public class AppointmentManager implements IAppointmentService {
                 appointment.getAppointmentDate().toLocalDate()
         );
         if(availableDate.isEmpty()){
-            throw new IllegalArgumentException("Doktor bu gunde musait degil");
+            throw new IllegalArgumentException("Doktor secilen gunde musait degil");
         }
         return this.appointmentRepo.save(appointment);
     }
