@@ -38,7 +38,7 @@ public class AvailableDateManager implements IAvailableDateService {
 
         Optional<AvailableDate> availableDateFromDb = availableDateRepo.findByDoctorIdAndAvailableDate(availableDateSaveRequest.getDoctorId(),availableDateSaveRequest.getAvailableDate());
         if(availableDateFromDb.isPresent()){
-            throw new RuntimeException("Doktor bu gunde zaten kayitli");
+            throw new RuntimeException("Doktorun bu tarihte kaydi var");
         }
         AvailableDate availableDate = modelMapper.forRequest().map(availableDateSaveRequest, AvailableDate.class);
         this.availableDateRepo.save(availableDate);

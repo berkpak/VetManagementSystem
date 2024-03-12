@@ -2,6 +2,7 @@ package dev.patika.vetSystem.business.concretes;
 
 import dev.patika.vetSystem.business.abstracts.ICustomerService;
 import dev.patika.vetSystem.core.config.modelMapper.IModelMapperService;
+import dev.patika.vetSystem.core.exception.AlreadyExistsException;
 import dev.patika.vetSystem.core.exception.NotFoundException;
 import dev.patika.vetSystem.core.result.ResultData;
 import dev.patika.vetSystem.core.utilies.Msg;
@@ -44,7 +45,7 @@ public class CustomerManager implements ICustomerService {
 
         Optional<Customer> customerFromDb = customerRepo.findByNameAndPhoneAndMail(customerSaveRequest.getName(), customerSaveRequest.getPhone(), customerSaveRequest.getMail());
         if(customerFromDb.isPresent()){
-            throw new RuntimeException(Msg.ALREADY_EXIST);
+            throw new AlreadyExistsException(Msg.ALREADY_EXIST);
         }
         Customer customer = modelMapper.forRequest().map(customerSaveRequest, Customer.class);
         this.customerRepo.save(customer);

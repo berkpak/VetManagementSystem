@@ -40,7 +40,7 @@ public class AppointmentManager implements IAppointmentService {
         Optional<Appointment> appointmentDate = appointmentRepo.findByDoctorIdAndAppointmentDate(
                 appointment.getDoctor().getId() , appointment.getAppointmentDate());
         if (!appointmentDate.isEmpty()) {
-            throw new IllegalArgumentException("Bu dokturun bu tarihte baska bir randevusu mevcut!!");
+            throw new RuntimeException("Bu dokturun bu tarihte baska bir randevusu mevcut!!");
         }
         //repo degil serviceden tasi
         Optional<AvailableDate> availableDate = availableDateRepo.findByDoctorIdAndAvailableDate(
@@ -48,7 +48,7 @@ public class AppointmentManager implements IAppointmentService {
                 appointment.getAppointmentDate().toLocalDate()
         );
         if(availableDate.isEmpty()){
-            throw new IllegalArgumentException("Doktor secilen gunde musait degil");
+            throw new RuntimeException("Doktor secilen gunde musait degil");
         }
         return this.appointmentRepo.save(appointment);
     }
