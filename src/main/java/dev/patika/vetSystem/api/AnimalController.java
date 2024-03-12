@@ -50,7 +50,8 @@ public class AnimalController {
     @ResponseStatus(HttpStatus.OK)
     public ResultData<List<AnimalResponse>> getAnimalsByName(
             @PathVariable(name = "name", required = false) String name) {
-        List<Animal> filteredAnimals = animalService.findByName(name);
+        String lowerCase = name.toLowerCase();
+        List<Animal> filteredAnimals = animalService.findByName(lowerCase);
         List<AnimalResponse> animalResponses = filteredAnimals.stream()
                 .map(animal -> modelMapper.forResponse().map(animal, AnimalResponse.class))
                 .collect(Collectors.toList());

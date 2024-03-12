@@ -55,7 +55,8 @@ public class CustomerController {
     @ResponseStatus(HttpStatus.OK)
     public ResultData<List<CustomerResponse>> getCustomersByName(
             @PathVariable(name = "name") String name) {
-        List<Customer> filteredCustomers = customerService.findByName(name);
+        String lowerCase = name.toLowerCase();
+        List<Customer> filteredCustomers = customerService.findByName(lowerCase);
         List<CustomerResponse> customerResponses = filteredCustomers.stream()
                 .map(customer -> modelMapper.forResponse().map(customer, CustomerResponse.class))
                 .collect(Collectors.toList());
