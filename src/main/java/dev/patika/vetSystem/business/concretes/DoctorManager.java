@@ -28,18 +28,6 @@ public class DoctorManager implements IDoctorService {
         this.doctorRepo = doctorRepo;
         this.modelMapper = modelMapper;
     }
-
-   /* @Override
-    public ResultData<Doctor> save(Doctor doctor) {
-
-        Doctor newDoctor = this.doctorRepo.save(doctor);
-        return ResultHelper.created(newDoctor);
-    }
-
-    */
-
-
-
     @Override
     public ResultData<Doctor>  update(Doctor doctor) {
         Doctor selectedDoctor = this.get(doctor.getId());
@@ -60,10 +48,9 @@ public class DoctorManager implements IDoctorService {
     }
 
     @Override
-    public boolean delete(int id) {
-        Doctor doctor = this.get(id);
-        this.doctorRepo.delete(doctor);
-        return true;
+    public void delete(int id) {
+
+        this.doctorRepo.delete(this.doctorRepo.findById(id).orElseThrow(()-> new NotFoundException(Msg.NOT_FOUND)));
     }
 
     @Override

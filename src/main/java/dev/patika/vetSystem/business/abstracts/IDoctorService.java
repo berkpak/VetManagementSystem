@@ -11,15 +11,13 @@ import javax.print.Doc;
 
 public interface IDoctorService {
 
-   // ResultData<Doctor>  save(Doctor doctor);
-    //ResultData<Doctor>  update(Doctor doctor);
+    ResultData<Doctor> update(Doctor doctor);
 
- //DoctorResponse update(int id, DoctorUpdateRequest doctorUpdateRequest);
+    // DoctorResponse get(int id);
+    Doctor get(int id);
 
-    ResultData<Doctor>  update(Doctor doctor);
-   // DoctorResponse get(int id);
-   Doctor get(int id);
-    boolean delete(int id);
+    void delete(int id);
+
     Page<Doctor> cursor(int page, int pageSize);
 
     DoctorResponse save(DoctorSaveRequest doctorSaveRequest);
