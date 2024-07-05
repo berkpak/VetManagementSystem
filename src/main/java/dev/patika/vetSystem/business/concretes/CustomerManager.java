@@ -9,6 +9,9 @@ import dev.patika.vetSystem.core.utilies.Msg;
 import dev.patika.vetSystem.core.utilies.ResultHelper;
 import dev.patika.vetSystem.dao.CustomerRepo;
 import dev.patika.vetSystem.dto.request.customer.CustomerSaveRequest;
+import dev.patika.vetSystem.dto.request.customer.CustomerUpdateRequest;
+import dev.patika.vetSystem.dto.response.CursorResponse;
+import dev.patika.vetSystem.dto.response.animal.AnimalResponse;
 import dev.patika.vetSystem.dto.response.customer.CustomerResponse;
 import dev.patika.vetSystem.entities.Animal;
 import dev.patika.vetSystem.entities.Customer;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerManager implements ICustomerService {
@@ -31,17 +35,8 @@ public class CustomerManager implements ICustomerService {
         this.modelMapper = modelMapper;
 
     }
-
-    /*@Override
-    public ResultData<Customer> save(Customer customer) {
-        Customer newCustomer = this.customerRepo.save(customer);
-        return ResultHelper.created(newCustomer);
-    }
-
-     */
-
     @Override
-    public CustomerResponse save(CustomerSaveRequest customerSaveRequest) {
+    public ResultData<CustomerResponse> save(CustomerSaveRequest customerSaveRequest) {
 
         Optional<Customer> customerFromDb = customerRepo.findByNameAndPhoneAndMail(customerSaveRequest.getName(), customerSaveRequest.getPhone(), customerSaveRequest.getMail());
         if(customerFromDb.isPresent()){
@@ -50,58 +45,75 @@ public class CustomerManager implements ICustomerService {
         Customer customer = modelMapper.forRequest().map(customerSaveRequest, Customer.class);
         this.customerRepo.save(customer);
 
-        return modelMapper.forResponse().map(customer, CustomerResponse.class);
+        modelMapper.forResponse().map(customer, CustomerResponse.class);
+        return ResultHelper.created(this.modelMapper.forResponse().map(customerSaveRequest, CustomerResponse.class));
     }
 
     @Override
-    public ResultData<Customer> update(Customer customer) {
-        Customer selectedCustomer = this.get(customer.getId());
+    public ResultData<CustomerResponse> update(CustomerUpdateRequest customerUpdateRequest) {
+        Customer selectedCustomer = this.customerRepo.findById(customerUpdateRequest.getId())
+                .orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
 
-        selectedCustomer.setName(customer.getName());
-        selectedCustomer.setMail(customer.getMail());
-        selectedCustomer.setPhone(customer.getPhone());
-        selectedCustomer.setAddress(customer.getAddress());
-        selectedCustomer.setCity(customer.getCity());
+        selectedCustomer.setName(customerUpdateRequest.getName());
+        selectedCustomer.setMail(customerUpdateRequest.getMail());
+        selectedCustomer.setPhone(customerUpdateRequest.getPhone());
+        selectedCustomer.setAddress(customerUpdateRequest.getAddress());
+        selectedCustomer.setCity(customerUpdateRequest.getCity());
 
         Customer updatedCustomer = this.customerRepo.save(selectedCustomer);
-
-        return ResultHelper.success(updatedCustomer) ;
+        CustomerResponse customerResponse = this.modelMapper.forResponse().map(updatedCustomer, CustomerResponse.class);
+        return ResultHelper.success(customerResponse) ;
     }
 
     @Override
-    public Customer get(int id) {
-        return this.customerRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+    public ResultData<CustomerResponse> get(int id) {
+        Customer customer = this.customerRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+        CustomerResponse customerResponse = this.modelMapper.forResponse().map(customer, CustomerResponse.class);
+        return ResultHelper.success(customerResponse);
     }
 
     @Override
-    public List<Customer> findByName(String name) {
+    public ResultData<List<CustomerResponse>> findByName(String name) {
         if (name == null || name.isEmpty()) {
             throw new NotFoundException(Msg.NOT_FOUND);
         }
-        return customerRepo.findByName(name);
+        String lowerCase = name.toLowerCase();
+        List<Customer> filteredCustomers = customerRepo.findByName(lowerCase);
+        List<CustomerResponse> customerResponses = filteredCustomers.stream()
+                .map(customer -> modelMapper.forResponse().map(customer, CustomerResponse.class))
+                .collect(Collectors.toList());
+        return ResultHelper.success(customerResponses);
+
     }
 
     @Override
-    public List<Animal> findAnimalByCustomerId(int customerId) {
-        Customer customer = get(customerId);
-
+    public ResultData<List<AnimalResponse>> findAnimalByCustomerId(int customerId) {
+        Customer customer = this.customerRepo.findById(customerId).orElseThrow(() -> new RuntimeException(Msg.NOT_FOUND));
         if (customer.getAnimalList() != null && !customer.getAnimalList().isEmpty()) {
-            return customer.getAnimalList();
+            List<AnimalResponse> animalResponses = customer.getAnimalList().stream()
+                    .map(animal -> modelMapper.forResponse().map(animal, AnimalResponse.class))
+                    .collect(Collectors.toList());
+            return ResultHelper.success(animalResponses);
         } else {
-            throw new IllegalArgumentException(Msg.NOT_FOUND);
+            throw new NotFoundException(Msg.NOT_FOUND);
         }
     }
 
+
+
     @Override
     public boolean delete(int id) {
-        Customer customer = this.get(id);
+        Customer customer = this.customerRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
         this.customerRepo.delete(customer);
         return true;
     }
 
     @Override
-    public Page<Customer> cursor(int page, int pageSize) {
+    public ResultData<CursorResponse<CustomerResponse>> cursor(int page, int pageSize) {
         Pageable pageable = PageRequest.of(page,pageSize);
-        return this.customerRepo.findAll(pageable);
+         Page<Customer> customerPage = this.customerRepo.findAll(pageable);
+        Page<CustomerResponse> customerResponsePage = customerPage
+                .map(customer -> this.modelMapper.forResponse().map(customer, CustomerResponse.class));
+        return ResultHelper.cursor(customerResponsePage);
     }
 }

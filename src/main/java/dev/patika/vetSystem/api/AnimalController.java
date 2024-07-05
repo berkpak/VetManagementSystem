@@ -21,64 +21,42 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/v1/animals")
 public class AnimalController {
-
     private final IAnimalService animalService;
-    private final IModelMapperService modelMapper;
 
     public AnimalController(IAnimalService animalService, IModelMapperService modelMapper) {
         this.animalService = animalService;
-        this.modelMapper = modelMapper;
     }
-
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public ResultData<AnimalResponse> save(@Valid @RequestBody AnimalSaveRequest animalSaveRequest){
-       // Animal saveAnimal = this.modelMapper.forRequest().map(animalSaveRequest, Animal.class);
-        this.animalService.save(animalSaveRequest);
-        return ResultHelper.created(this.modelMapper.forResponse().map(animalSaveRequest, AnimalResponse.class));
+    public ResultData<AnimalResponse> save(@Valid @RequestBody AnimalSaveRequest animalSaveRequest) {
+        return animalService.save(animalSaveRequest);
     }
-
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResultData<AnimalResponse> get(@PathVariable("id") int id){
-        Animal animal = this.animalService.get(id);
-        AnimalResponse animalResponse = this.modelMapper.forResponse().map(animal, AnimalResponse.class);
-        return ResultHelper.success(animalResponse);
-    }
-
-    @GetMapping("/name/{name}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResultData<List<AnimalResponse>> getAnimalsByName(
-            @PathVariable(name = "name", required = false) String name) {
-        String lowerCase = name.toLowerCase();
-        List<Animal> filteredAnimals = animalService.findByName(lowerCase);
-        List<AnimalResponse> animalResponses = filteredAnimals.stream()
-                .map(animal -> modelMapper.forResponse().map(animal, AnimalResponse.class))
-                .collect(Collectors.toList());
-        return ResultHelper.success(animalResponses);
-    }
-
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<CursorResponse<AnimalResponse>> cursor(
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize
     ){
-        Page<Animal> animalPage = this.animalService.cursor(page,pageSize);
-        Page<AnimalResponse> animalResponsePage = animalPage
-                .map(animal -> this.modelMapper.forResponse().map(animal, AnimalResponse.class));
-        return ResultHelper.cursor(animalResponsePage);
+        return animalService.cursor(page,pageSize);
+    }
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResultData<AnimalResponse> get(@PathVariable("id") int id){
+        return animalService.get(id);
+    }
+
+    @GetMapping("/name/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResultData<List<AnimalResponse>> getAnimalsByName(@PathVariable(name = "name", required = false) String name) {
+        return this.animalService.findByName(name);
     }
 
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<AnimalResponse> update(@Valid @RequestBody AnimalUpdateRequest animalUpdateRequest){
+       return animalService.update(animalUpdateRequest);
 
-        Animal updateAnimal = this.modelMapper.forRequest().map(animalUpdateRequest, Animal.class);
-        this.animalService.update(updateAnimal);
-        return ResultHelper.success(this.modelMapper.forResponse().map(updateAnimal, AnimalResponse.class));
     }
-
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Result delete(@PathVariable("id") int id){

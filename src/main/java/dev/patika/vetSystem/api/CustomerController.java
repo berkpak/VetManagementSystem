@@ -28,49 +28,18 @@ import java.util.stream.Collectors;
 public class CustomerController {
 
     private final ICustomerService customerService;
-    private final IModelMapperService modelMapper;
+
 
     public CustomerController(ICustomerService customerService, IModelMapperService modelMapper) {
         this.customerService = customerService;
-        this.modelMapper = modelMapper;
     }
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<CustomerResponse> save(@Valid @RequestBody CustomerSaveRequest customerSaveRequest){
        // Customer saveCustomer = this.modelMapper.forRequest().map(customerSaveRequest, Customer.class);
-        this.customerService.save(customerSaveRequest);
-        return ResultHelper.created(this.modelMapper.forResponse().map(customerSaveRequest, CustomerResponse.class));
-    }
+        return customerService.save(customerSaveRequest);
 
-    @GetMapping("/getById/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResultData<CustomerResponse> get(@PathVariable("id") int id){
-        Customer customer = this.customerService.get(id);
-        CustomerResponse customerResponse = this.modelMapper.forResponse().map(customer, CustomerResponse.class);
-        return ResultHelper.success(customerResponse);
-    }
-
-    @GetMapping("/getByName/{name}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResultData<List<CustomerResponse>> getCustomersByName(
-            @PathVariable(name = "name") String name) {
-        String lowerCase = name.toLowerCase();
-        List<Customer> filteredCustomers = customerService.findByName(lowerCase);
-        List<CustomerResponse> customerResponses = filteredCustomers.stream()
-                .map(customer -> modelMapper.forResponse().map(customer, CustomerResponse.class))
-                .collect(Collectors.toList());
-        return ResultHelper.success(customerResponses);
-    }
-
-    @GetMapping("/{customerId}/animals")
-    @ResponseStatus(HttpStatus.OK)
-    public ResultData<List<AnimalResponse>> getCustomerAnimals(@PathVariable("customerId") int customerId) {
-        List<Animal> customerAnimals = customerService.findAnimalByCustomerId(customerId);
-        List<AnimalResponse> animalResponses = customerAnimals.stream()
-                .map(animal -> modelMapper.forResponse().map(animal, AnimalResponse.class))
-                .collect(Collectors.toList());
-        return ResultHelper.success(animalResponses);
     }
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
@@ -78,19 +47,33 @@ public class CustomerController {
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize
     ){
-        Page<Customer> customerPage = this.customerService.cursor(page,pageSize);
-        Page<CustomerResponse> customerResponsePage = customerPage
-                .map(customer -> this.modelMapper.forResponse().map(customer, CustomerResponse.class));
-        return ResultHelper.cursor(customerResponsePage);
+        return customerService.cursor(page,pageSize);
     }
+
+    @GetMapping("/getById/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResultData<CustomerResponse> get(@PathVariable("id") int id){
+        return customerService.get(id);
+    }
+
+    @GetMapping("/getByName/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResultData<List<CustomerResponse>> getCustomersByName(
+            @PathVariable(name = "name") String name) {
+        return customerService.findByName(name);
+    }
+
+    @GetMapping("/{customerId}/animals")
+    @ResponseStatus(HttpStatus.OK)
+    public ResultData<List<AnimalResponse>> getCustomerAnimals(@PathVariable("customerId") int customerId) {
+        return this.customerService.findAnimalByCustomerId(customerId);
+    }
+
 
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<CustomerResponse> update(@Valid @RequestBody CustomerUpdateRequest customerUpdateRequest){
-
-        Customer updateCustomer = this.modelMapper.forRequest().map(customerUpdateRequest, Customer.class);
-        this.customerService.update(updateCustomer);
-        return ResultHelper.success(this.modelMapper.forResponse().map(updateCustomer, CustomerResponse.class));
+        return customerService.update(customerUpdateRequest);
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

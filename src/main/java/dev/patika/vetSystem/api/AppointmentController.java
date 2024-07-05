@@ -27,47 +27,37 @@ import java.util.stream.Collectors;
 public class AppointmentController {
 
     private final IAppointmentService appointmentService;
-    private final IModelMapperService modelMapper;
-    private final IAnimalService animalService;
 
     public AppointmentController(IAppointmentService appointmentService, IModelMapperService modelMapper, IAnimalService animalService) {
         this.appointmentService = appointmentService;
-        this.modelMapper = modelMapper;
-        this.animalService = animalService;
     }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public ResultData<AppointmentResponse> save(@Valid @RequestBody AppointmentSaveRequest appointmentSaveRequest){
-        Appointment saveAppointments = this.modelMapper.forRequest().map(appointmentSaveRequest, Appointment.class);
-        this.appointmentService.save(saveAppointments);
-        return ResultHelper.created(this.modelMapper.forResponse().map(saveAppointments, AppointmentResponse.class));
+    public ResultData<AppointmentResponse> save(@Valid @RequestBody AppointmentSaveRequest appointmentSaveRequest) {
+        return this.appointmentService.save(appointmentSaveRequest);
     }
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResultData<AppointmentResponse> get(@PathVariable("id") int id){
-        Appointment appointment = this.appointmentService.get(id);
-        AppointmentResponse appointmentResponse = this.modelMapper.forResponse().map(appointment, AppointmentResponse.class);
-        return ResultHelper.success(appointmentResponse);
+    public ResultData<AppointmentResponse> get(@PathVariable("id") int id) {
+        return this.appointmentService.get(id);
     }
+
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<CursorResponse<AppointmentResponse>> cursor(
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize
-    ){
-        Page<Appointment> appointmentPage = this.appointmentService.cursor(page,pageSize);
-        Page<AppointmentResponse> appointmentResponsePage = appointmentPage
-                .map(appointment -> this.modelMapper.forResponse().map(appointment, AppointmentResponse.class));
-        return ResultHelper.cursor(appointmentResponsePage);
+    ) {
+        return this.appointmentService.cursor(page, pageSize);
     }
+
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
-    public ResultData<AppointmentResponse> update(@Valid @RequestBody AppointmentUpdateRequest appointmentUpdateRequest){
-
-        Appointment updateAppointment = this.modelMapper.forRequest().map(appointmentUpdateRequest, Appointment.class);
-        this.appointmentService.update(updateAppointment);
-        return ResultHelper.success(this.modelMapper.forResponse().map(updateAppointment, AppointmentResponse.class));
+    public ResultData<AppointmentResponse> update(@Valid @RequestBody AppointmentUpdateRequest appointmentUpdateRequest) {
+        return this.appointmentService.update(appointmentUpdateRequest);
     }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Result delete(@PathVariable("id") int id){
@@ -76,24 +66,20 @@ public class AppointmentController {
     }
     @GetMapping("/doctorId/{doctorId}")
     @ResponseStatus(HttpStatus.OK)
-    public List<AppointmentResponse> getByDoctorIdAndAppointmentDateBetween(
+    public ResultData<List<AppointmentResponse>> getByDoctorIdAndAppointmentDateBetween(
             @PathVariable("doctorId") int doctorId,
             @RequestParam("startDateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime,
             @RequestParam("endDateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime) {
-        List<Appointment> appointments = this.appointmentService.findByDoctorIdAndAppointmentDateBetween(doctorId, startDateTime, endDateTime);
-        return  appointments.stream()
-                .map(appointment -> this.modelMapper.forResponse().map(appointment, AppointmentResponse.class))
-                .collect(Collectors.toList());
+        return this.appointmentService.findByDoctorIdAndAppointmentDateBetween(doctorId, startDateTime, endDateTime);
     }
+
     @GetMapping("/getAnimalById/{animalId}")
     @ResponseStatus(HttpStatus.OK)
-    public List<AppointmentResponse> getByAnimalIdAndAppointmentDateBetween(
+    public ResultData<List<AppointmentResponse>> getByAnimalIdAndAppointmentDateBetween(
             @PathVariable("animalId") int animalId,
             @RequestParam("startDateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime,
             @RequestParam("endDateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime) {
-        List<Appointment> appointments = this.appointmentService.findByAnimalIdAndAppointmentDateBetween(animalId, startDateTime, endDateTime);
-        return appointments.stream()
-                .map(appointment -> this.modelMapper.forResponse().map(appointment, AppointmentResponse.class))
-                .collect(Collectors.toList());
+        return this.appointmentService.findByAnimalIdAndAppointmentDateBetween(animalId, startDateTime, endDateTime);
     }
+
 }

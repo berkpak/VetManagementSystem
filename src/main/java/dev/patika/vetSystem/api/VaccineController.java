@@ -31,25 +31,15 @@ import static java.util.stream.Collectors.toList;
 public class VaccineController {
 
     private final IVaccineService vaccineService;
-    private final IModelMapperService modelMapper;
 
     public VaccineController(IVaccineService vaccineService, IModelMapperService modelMapper) {
         this.vaccineService = vaccineService;
-        this.modelMapper = modelMapper;
+
     }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<VaccineResponse> save(@Valid @RequestBody VaccineSaveRequest vaccineSaveRequest){
-        Vaccine saveVaccine = this.modelMapper.forRequest().map(vaccineSaveRequest, Vaccine.class);
-        this.vaccineService.save(saveVaccine);
-        return ResultHelper.created(this.modelMapper.forResponse().map(saveVaccine, VaccineResponse.class));
-    }
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResultData<VaccineResponse> get(@PathVariable("id") int id){
-        Vaccine vaccine = this.vaccineService.get(id);
-        VaccineResponse vaccineResponse = this.modelMapper.forResponse().map(vaccine, VaccineResponse.class);
-        return ResultHelper.success(vaccineResponse);
+        return vaccineService.save(vaccineSaveRequest);
     }
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
@@ -57,38 +47,33 @@ public class VaccineController {
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize
     ){
-        Page<Vaccine> vaccinePage = this.vaccineService.cursor(page,pageSize);
-        Page<VaccineResponse> vaccineResponsePage = vaccinePage
-                .map(vaccine -> this.modelMapper.forResponse().map(vaccine, VaccineResponse.class));
-        return ResultHelper.cursor(vaccineResponsePage);
+        return vaccineService.cursor(page, pageSize);
+    }
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResultData<VaccineResponse> get(@PathVariable("id") int id){
+        return vaccineService.get(id);
     }
 
+
     @GetMapping("/animal/{animalId}")
+    @ResponseStatus(HttpStatus.OK)
     public ResultData<List<VaccineResponse>> getAnimalById(@PathVariable("animalId") int animalId) {
-        List<Vaccine> vaccines = vaccineService.findByAnimalId(animalId);
-        List<VaccineResponse> vaccineResponses = vaccines.stream()
-                .map(vaccine -> modelMapper.forResponse().map(vaccine, VaccineResponse.class))
-                .collect(toList());
-        return ResultHelper.success(vaccineResponses);
+        return this.vaccineService.findByAnimalId(animalId);
     }
 
     @GetMapping("/protection-dates")
     @ResponseStatus(HttpStatus.OK)
-    public ResultData <List<VaccineResponse>> getByProtectionEndDateBetween(
+    public ResultData<List<VaccineResponse>> getByProtectionEndDateBetween(
             @RequestParam("start_date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("end_date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate finishDate) {
-        List<Vaccine> vaccines = this.vaccineService.findByProtectionDate(startDate, finishDate);
-        List<VaccineResponse> vaccineResponses = vaccines.stream().map(vaccine -> this.modelMapper.forResponse().map(vaccine, VaccineResponse.class)).toList();
-        return ResultHelper.success(vaccineResponses);
+        return this.vaccineService.findByProtectionDate(startDate, finishDate);
     }
 
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<VaccineResponse> update(@Valid @RequestBody VaccineUpdateRequest vaccineUpdateRequest){
-
-        Vaccine updateVaccine = this.modelMapper.forRequest().map(vaccineUpdateRequest, Vaccine.class);
-        this.vaccineService.update(updateVaccine);
-        return ResultHelper.success(this.modelMapper.forResponse().map(updateVaccine, VaccineResponse.class));
+        return vaccineService.update(vaccineUpdateRequest);
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

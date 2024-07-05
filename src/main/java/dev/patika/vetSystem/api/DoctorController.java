@@ -24,11 +24,10 @@ import org.springframework.web.bind.annotation.*;
 public class DoctorController {
 
     private final IDoctorService doctorService;
-    private final IModelMapperService modelMapper;
+
 
     public DoctorController(IDoctorService doctorService, IModelMapperService modelMapper) {
         this.doctorService = doctorService;
-        this.modelMapper = modelMapper;
     }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
@@ -36,33 +35,26 @@ public class DoctorController {
         return ResultHelper.created(doctorService.save(doctorSaveRequest));
     }
 
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResultData<DoctorResponse> get(@PathVariable("id") int id){
-        Doctor doctor = this.doctorService.get(id);
-        DoctorResponse doctorResponse = this.modelMapper.forResponse().map(doctor, DoctorResponse.class);
-        return ResultHelper.success(doctorResponse);
-
-        //return ResultHelper.success(doctorService.get(id));
-    }
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<CursorResponse<DoctorResponse>> cursor(
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize
     ){
-        Page<Doctor> doctorPage = this.doctorService.cursor(page,pageSize);
-        Page<DoctorResponse> doctorResponsePage = doctorPage
-                .map(doctor -> this.modelMapper.forResponse().map(doctor, DoctorResponse.class));
-        return ResultHelper.cursor(doctorResponsePage);
+        return doctorService.cursor(page, pageSize);
     }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResultData<DoctorResponse> get(@PathVariable("id") int id){
+        return doctorService.get(id);
+    }
+
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<DoctorResponse> update(@Valid @RequestBody DoctorUpdateRequest doctorUpdateRequest){
 
-        Doctor updateDoctor = this.modelMapper.forRequest().map(doctorUpdateRequest, Doctor.class);
-        this.doctorService.update(updateDoctor);
-        return ResultHelper.success(this.modelMapper.forResponse().map(updateDoctor, DoctorResponse.class));
+        return doctorService.update(doctorUpdateRequest);
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

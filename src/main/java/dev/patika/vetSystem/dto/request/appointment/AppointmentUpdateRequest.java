@@ -1,5 +1,7 @@
 package dev.patika.vetSystem.dto.request.appointment;
 
+import dev.patika.vetSystem.entities.Animal;
+import dev.patika.vetSystem.entities.Doctor;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,6 +16,6 @@ public class AppointmentUpdateRequest {
     @Positive(message = "Id degeri pozitif olmali")
     private int id;
     private LocalDateTime appointmentDate;
-    private int animalId;
-    private int doctorId;
+    private Animal animalId;
+    private Doctor doctorId;
 }

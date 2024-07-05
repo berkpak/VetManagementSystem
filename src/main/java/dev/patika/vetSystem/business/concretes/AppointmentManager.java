@@ -8,6 +8,9 @@ import dev.patika.vetSystem.core.utilies.Msg;
 import dev.patika.vetSystem.core.utilies.ResultHelper;
 import dev.patika.vetSystem.dao.AppointmentRepo;
 import dev.patika.vetSystem.dao.AvailableDateRepo;
+import dev.patika.vetSystem.dto.request.appointment.AppointmentSaveRequest;
+import dev.patika.vetSystem.dto.request.appointment.AppointmentUpdateRequest;
+import dev.patika.vetSystem.dto.response.CursorResponse;
 import dev.patika.vetSystem.dto.response.appointment.AppointmentResponse;
 import dev.patika.vetSystem.entities.Appointment;
 import dev.patika.vetSystem.entities.AvailableDate;
@@ -20,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AppointmentManager implements IAppointmentService {
@@ -35,59 +39,80 @@ public class AppointmentManager implements IAppointmentService {
     }
 
     @Override
-    public Appointment save(Appointment appointment) {
+    public ResultData<AppointmentResponse> save(AppointmentSaveRequest appointmentSaveRequest) {
+        Appointment appointment = modelMapper.forRequest().map(appointmentSaveRequest, Appointment.class);
 
         Optional<Appointment> appointmentDate = appointmentRepo.findByDoctorIdAndAppointmentDate(
-                appointment.getDoctor().getId() , appointment.getAppointmentDate());
+                appointment.getDoctor().getId(), appointment.getAppointmentDate());
         if (!appointmentDate.isEmpty()) {
-            throw new RuntimeException("Bu dokturun bu tarihte baska bir randevusu mevcut!!");
+            throw new RuntimeException("Bu doktorun bu tarihte başka bir randevusu mevcut!");
         }
-        //repo degil serviceden tasi
+
         Optional<AvailableDate> availableDate = availableDateRepo.findByDoctorIdAndAvailableDate(
-                appointment.getDoctor().getId(),
-                appointment.getAppointmentDate().toLocalDate()
-        );
-        if(availableDate.isEmpty()){
-            throw new RuntimeException("Doktor secilen gunde musait degil");
+                appointment.getDoctor().getId(), appointment.getAppointmentDate().toLocalDate());
+        if (availableDate.isEmpty()) {
+            throw new RuntimeException("Doktor seçilen günde müsait değil");
         }
-        return this.appointmentRepo.save(appointment);
+
+        Appointment savedAppointment = appointmentRepo.save(appointment);
+        AppointmentResponse appointmentResponse = modelMapper.forResponse().map(savedAppointment, AppointmentResponse.class);
+        return ResultHelper.created(appointmentResponse);
     }
 
     @Override
-    public Appointment update(Appointment appointment) {
-       Appointment selectedAppointment = this.get(appointment.getId());
-
-       selectedAppointment.setAppointmentDate(appointment.getAppointmentDate());
-       selectedAppointment.setDoctor(appointment.getDoctor());
-       selectedAppointment.setAnimal(appointment.getAnimal());
-        return this.appointmentRepo.save(selectedAppointment);
+    public ResultData<AppointmentResponse> get(int id) {
+        Appointment appointment = appointmentRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+        AppointmentResponse appointmentResponse = modelMapper.forResponse().map(appointment, AppointmentResponse.class);
+        return ResultHelper.success(appointmentResponse);
     }
 
     @Override
-    public Appointment get(int id) {
-
-        return this.appointmentRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+    public ResultData<CursorResponse<AppointmentResponse>> cursor(int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize);
+        Page<Appointment> appointmentPage = appointmentRepo.findAll(pageable);
+        Page<AppointmentResponse> appointmentResponsePage = appointmentPage
+                .map(appointment -> modelMapper.forResponse().map(appointment, AppointmentResponse.class));
+        return ResultHelper.cursor(appointmentResponsePage);
     }
+
+    @Override
+    public ResultData<AppointmentResponse> update(AppointmentUpdateRequest appointmentUpdateRequest) {
+        Appointment selectedAppointment = this.appointmentRepo.findById(appointmentUpdateRequest.getId())
+                .orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+
+        selectedAppointment.setAppointmentDate(appointmentUpdateRequest.getAppointmentDate());
+            selectedAppointment.setDoctor(appointmentUpdateRequest.getDoctorId());
+        selectedAppointment.setAnimal(appointmentUpdateRequest.getAnimalId());
+
+        Appointment updatedAppointment = appointmentRepo.save(selectedAppointment);
+        AppointmentResponse appointmentResponse = modelMapper.forResponse().map(updatedAppointment, AppointmentResponse.class);
+        return ResultHelper.success(appointmentResponse);
+    }
+
 
     @Override
     public boolean delete(int id) {
-        Appointment appointment = this.get(id);
+        Appointment appointment = this.appointmentRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
         this.appointmentRepo.delete(appointment);
         return true;
     }
-
     @Override
-    public Page<Appointment> cursor(int page, int pageSize) {
-        Pageable pageable = PageRequest.of(page,pageSize);
-        return this.appointmentRepo.findAll(pageable);
-    }
-    @Override
-    public List<Appointment> findByDoctorIdAndAppointmentDateBetween(int doctorId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return  this.appointmentRepo.findByDoctorIdAndAppointmentDateBetween(doctorId, startDateTime, endDateTime);
+    public ResultData<List<AppointmentResponse>> findByDoctorIdAndAppointmentDateBetween(int doctorId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        List<Appointment> appointments = this.appointmentRepo.findByDoctorIdAndAppointmentDateBetween(doctorId, startDateTime, endDateTime);
+        List<AppointmentResponse> appointmentResponses = appointments.stream()
+                .map(appointment -> modelMapper.forResponse().map(appointment, AppointmentResponse.class))
+                .collect(Collectors.toList());
+        return ResultHelper.success(appointmentResponses);
     }
 
     @Override
-    public List<Appointment> findByAnimalIdAndAppointmentDateBetween(int animalId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return this.appointmentRepo.findByAnimalIdAndAppointmentDateBetween(animalId,startDateTime,endDateTime);
+    public ResultData<List<AppointmentResponse>> findByAnimalIdAndAppointmentDateBetween(int animalId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        List<Appointment> appointments = this.appointmentRepo.findByAnimalIdAndAppointmentDateBetween(animalId, startDateTime, endDateTime);
+        List<AppointmentResponse> appointmentResponses = appointments.stream()
+                .map(appointment -> modelMapper.forResponse().map(appointment, AppointmentResponse.class))
+                .collect(Collectors.toList());
+        return ResultHelper.success(appointmentResponses);
     }
+
 }

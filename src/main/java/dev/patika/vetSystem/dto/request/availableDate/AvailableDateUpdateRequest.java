@@ -1,5 +1,6 @@
 package dev.patika.vetSystem.dto.request.availableDate;
 
+import dev.patika.vetSystem.entities.Doctor;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -16,5 +17,5 @@ public class AvailableDateUpdateRequest {
     @Positive(message = "Id degeri poszitif olmali")
     private int id;
     private LocalDate availableDate;
-    private int doctorId;
+    private Doctor doctorId;
 }

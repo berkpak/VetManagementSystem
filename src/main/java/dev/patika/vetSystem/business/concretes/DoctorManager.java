@@ -9,6 +9,8 @@ import dev.patika.vetSystem.core.utilies.Msg;
 import dev.patika.vetSystem.core.utilies.ResultHelper;
 import dev.patika.vetSystem.dao.DoctorRepo;
 import dev.patika.vetSystem.dto.request.doctor.DoctorSaveRequest;
+import dev.patika.vetSystem.dto.request.doctor.DoctorUpdateRequest;
+import dev.patika.vetSystem.dto.response.CursorResponse;
 import dev.patika.vetSystem.dto.response.doctor.DoctorResponse;
 import dev.patika.vetSystem.entities.Doctor;
 import org.springframework.data.domain.Page;
@@ -29,22 +31,26 @@ public class DoctorManager implements IDoctorService {
         this.modelMapper = modelMapper;
     }
     @Override
-    public ResultData<Doctor>  update(Doctor doctor) {
-        Doctor selectedDoctor = this.get(doctor.getId());
+    public ResultData<DoctorResponse>  update(DoctorUpdateRequest doctorUpdateRequest) {
+        Doctor selectedDoctor = this.doctorRepo.findById(doctorUpdateRequest.getId())
+                .orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
 
-        selectedDoctor.setName(doctor.getName());
-        selectedDoctor.setCity(doctor.getCity());
-        selectedDoctor.setAddress(doctor.getAddress());
-        selectedDoctor.setMail(doctor.getMail());
-        selectedDoctor.setPhone(doctor.getPhone());
+        selectedDoctor.setName(doctorUpdateRequest.getName());
+        selectedDoctor.setCity(doctorUpdateRequest.getCity());
+        selectedDoctor.setAddress(doctorUpdateRequest.getAddress());
+        selectedDoctor.setMail(doctorUpdateRequest.getMail());
+        selectedDoctor.setPhone(doctorUpdateRequest.getPhone());
 
         Doctor updatedDoctor = this.doctorRepo.save(selectedDoctor);
-        return ResultHelper.success(updatedDoctor);
+        DoctorResponse doctorResponse = this.modelMapper.forResponse().map(updatedDoctor, DoctorResponse.class);
+        return ResultHelper.success(doctorResponse);
     }
 
     @Override
-    public Doctor get(int id) {
-        return this.doctorRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+    public ResultData<DoctorResponse> get(int id) {
+        Doctor doctor = this.doctorRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+        DoctorResponse doctorResponse = this.modelMapper.forResponse().map(doctor, DoctorResponse.class);
+        return ResultHelper.success(doctorResponse);
     }
 
     @Override
@@ -54,9 +60,12 @@ public class DoctorManager implements IDoctorService {
     }
 
     @Override
-    public Page<Doctor> cursor(int page, int pageSize) {
+    public ResultData<CursorResponse<DoctorResponse>> cursor(int page, int pageSize) {
         Pageable pageable = PageRequest.of(page, pageSize);
-        return this.doctorRepo.findAll(pageable);
+        Page<Doctor> doctorPage = this.doctorRepo.findAll(pageable);
+        Page<DoctorResponse> doctorResponsePage = doctorPage
+                .map(doctor -> this.modelMapper.forResponse().map(doctor, DoctorResponse.class));
+        return ResultHelper.cursor(doctorResponsePage);
     }
 
     @Override

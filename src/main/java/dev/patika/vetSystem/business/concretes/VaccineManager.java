@@ -1,9 +1,17 @@
 package dev.patika.vetSystem.business.concretes;
 
 import dev.patika.vetSystem.business.abstracts.IVaccineService;
+import dev.patika.vetSystem.core.config.modelMapper.IModelMapperService;
 import dev.patika.vetSystem.core.exception.NotFoundException;
+import dev.patika.vetSystem.core.result.ResultData;
 import dev.patika.vetSystem.core.utilies.Msg;
+import dev.patika.vetSystem.core.utilies.ResultHelper;
 import dev.patika.vetSystem.dao.VaccineRepo;
+import dev.patika.vetSystem.dto.request.vaccine.VaccineSaveRequest;
+import dev.patika.vetSystem.dto.request.vaccine.VaccineUpdateRequest;
+import dev.patika.vetSystem.dto.response.CursorResponse;
+import dev.patika.vetSystem.dto.response.vaccine.VaccineResponse;
+import dev.patika.vetSystem.entities.Animal;
 import dev.patika.vetSystem.entities.Vaccine;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,71 +21,95 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class VaccineManager implements IVaccineService {
 
     private final VaccineRepo vaccineRepo;
+    private final IModelMapperService modelMapper;
 
-    public VaccineManager(VaccineRepo vaccineRepo) {
+    public VaccineManager(VaccineRepo vaccineRepo, IModelMapperService modelMapper) {
         this.vaccineRepo = vaccineRepo;
 
+        this.modelMapper = modelMapper;
     }
 
     @Override
-    public Vaccine save(Vaccine vaccine) {
-
-        List<Vaccine> vaccines = this.findByNameAndCode(vaccine.getName(), vaccine.getCode());
-
+    public ResultData<VaccineResponse> save(VaccineSaveRequest vaccineSaveRequest) {
+        List<Vaccine> vaccines = this.findByNameAndCode(vaccineSaveRequest.getName(), vaccineSaveRequest.getCode());
         if(!vaccines.isEmpty()){
             for(Vaccine vaccine1: vaccines){
-                if(vaccine1.getProtectionFinishDate().isAfter(vaccine.getProtectionStartDate())){
+                if(vaccine1.getProtectionFinishDate().isAfter(vaccine1.getProtectionStartDate())){
                     throw new RuntimeException("Koruyuculuk tarihi bitmeden yeni bir asi kayit edilemez");
                 }
             }
         }
-        return this.vaccineRepo.save(vaccine);
+        Vaccine saveVaccine = this.modelMapper.forRequest().map(vaccineSaveRequest, Vaccine.class);
+        this.vaccineRepo.save(saveVaccine);
+        return ResultHelper.created(this.modelMapper.forResponse().map(saveVaccine, VaccineResponse.class));
     }
 
     @Override
-    public Vaccine update(Vaccine vaccine) {
-       Vaccine selectedVaccine = this.get(vaccine.getId());
+    public ResultData<VaccineResponse> update(VaccineUpdateRequest vaccineUpdateRequest) {
+       Vaccine selectedVaccine = this.vaccineRepo.findById(vaccineUpdateRequest.getId())
+                       .orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
 
-       selectedVaccine.setName(vaccine.getName());
-       selectedVaccine.setCode(vaccine.getCode());
-       selectedVaccine.setProtectionStartDate(vaccine.getProtectionStartDate());
-       selectedVaccine.setProtectionFinishDate(vaccine.getProtectionFinishDate());
-        return vaccineRepo.save(selectedVaccine);
+       selectedVaccine.setName(vaccineUpdateRequest.getName());
+       selectedVaccine.setCode(vaccineUpdateRequest.getCode());
+       selectedVaccine.setProtectionStartDate(vaccineUpdateRequest.getProtectionStartDate());
+       selectedVaccine.setProtectionFinishDate(vaccineUpdateRequest.getProtectionFinishDate());
+
+        Vaccine updateVaccine = this.vaccineRepo.save(selectedVaccine);
+        VaccineResponse vaccineResponse = this.modelMapper.forResponse().map(updateVaccine, VaccineResponse.class);
+        return ResultHelper.success(vaccineResponse);
     }
 
     @Override
-    public Vaccine get(int id) {
-        return this.vaccineRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+    public ResultData<VaccineResponse> get(int id) {
+        Vaccine vaccine = this.vaccineRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
+        VaccineResponse vaccineResponse = this.modelMapper.forResponse().map(vaccine, VaccineResponse.class);
+        return ResultHelper.success(vaccineResponse);
     }
 
     @Override
     public boolean delete(int id) {
-        Vaccine vaccine = this.get(id);
+        Vaccine vaccine = this.vaccineRepo.findById(id).orElseThrow(() -> new NotFoundException(Msg.NOT_FOUND));
         this.vaccineRepo.delete(vaccine);
         return true;
     }
 
     @Override
-    public Page<Vaccine> cursor(int page, int pageSize) {
+    public ResultData<CursorResponse<VaccineResponse>> cursor(int page, int pageSize) {
         Pageable pageable = PageRequest.of(page,pageSize);
-        return this.vaccineRepo.findAll(pageable);
+        Page<Vaccine> vaccinePage = this.vaccineRepo.findAll(pageable);
+        Page<VaccineResponse> vaccineResponsePage = vaccinePage.map(vaccine -> this.modelMapper.forResponse().map(vaccine, VaccineResponse.class));
+        return ResultHelper.cursor(vaccineResponsePage);
     }
 
     @Override
-    public List<Vaccine> findByAnimalId(int animalId) {
-        Objects.requireNonNull(animalId, Msg.NOT_FOUND);
-        return vaccineRepo.findByAnimalId(animalId);
+    public ResultData<List<VaccineResponse>> findByAnimalId(int animalId) {
+        if (animalId <= 0) {
+            throw new IllegalArgumentException(Msg.NOT_FOUND);
+        }
+        List<Vaccine> vaccines = vaccineRepo.findByAnimalId(animalId);
+        List<VaccineResponse> vaccineResponses = vaccines.stream()
+                .map(vaccine -> modelMapper.forResponse().map(vaccine, VaccineResponse.class))
+                .collect(Collectors.toList());
+        return ResultHelper.success(vaccineResponses);
     }
 
     @Override
-    public List<Vaccine> findByProtectionDate(LocalDate startDate, LocalDate finishDate) {
-        return this.vaccineRepo.findByProtectionFinishDateBetween(startDate,finishDate);
+    public ResultData<List<VaccineResponse>> findByProtectionDate(LocalDate startDate, LocalDate finishDate) {
+        List<Vaccine> vaccines = vaccineRepo.findByProtectionFinishDateBetween(startDate, finishDate);
+        List<VaccineResponse> vaccineResponses = vaccines.stream()
+                .map(vaccine -> modelMapper.forResponse().map(vaccine, VaccineResponse.class))
+                .collect(Collectors.toList());
+        return ResultHelper.success(vaccineResponses);
     }
+
 
     @Override
     public List<Vaccine> findByNameAndCode(String name, String code) {

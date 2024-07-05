@@ -2,6 +2,8 @@ package dev.patika.vetSystem.business.abstracts;
 
 import dev.patika.vetSystem.core.result.ResultData;
 import dev.patika.vetSystem.dto.request.customer.CustomerSaveRequest;
+import dev.patika.vetSystem.dto.request.customer.CustomerUpdateRequest;
+import dev.patika.vetSystem.dto.response.CursorResponse;
 import dev.patika.vetSystem.dto.response.animal.AnimalResponse;
 import dev.patika.vetSystem.dto.response.customer.CustomerResponse;
 import dev.patika.vetSystem.entities.Animal;
@@ -14,13 +16,13 @@ public interface ICustomerService {
 
    // ResultData<Customer> save(Customer customer);
 
-    CustomerResponse save (CustomerSaveRequest customerSaveRequest);
-    ResultData<Customer> update(Customer customer);
-    Customer get(int id);
+    ResultData<CustomerResponse>save (CustomerSaveRequest customerSaveRequest);
+    ResultData<CustomerResponse> update(CustomerUpdateRequest customerUpdateRequest);
+    ResultData<CustomerResponse> get(int id);
     boolean delete(int id);
-    Page<Customer> cursor(int page, int pageSize);
-    List<Customer> findByName(String name);
+    ResultData<CursorResponse<CustomerResponse>> cursor(int page, int pageSize);
+    ResultData<List<CustomerResponse>> findByName(String name);
 
-    List<Animal> findAnimalByCustomerId(int customerId);
+    ResultData<List<AnimalResponse>> findAnimalByCustomerId(int customerId);
 
 }
